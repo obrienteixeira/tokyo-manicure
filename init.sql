@@ -1,0 +1,177 @@
+CREATE DATABASE IF NOT EXISTS salao_manicure;
+USE salao_manicure;
+
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  openId VARCHAR(64) NOT NULL UNIQUE,
+  name TEXT,
+  email VARCHAR(320),
+  loginMethod VARCHAR(64),
+  role ENUM('user','admin') NOT NULL DEFAULT 'user',
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  lastSignedIn DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS clientes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nome VARCHAR(255) NOT NULL,
+  telefone VARCHAR(20) NOT NULL,
+  email VARCHAR(320),
+  dataNascimento DATETIME,
+  dataRegistro DATETIME DEFAULT CURRENT_TIMESTAMP,
+  observacoes TEXT,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS funcionarios (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nome VARCHAR(255) NOT NULL,
+  telefone VARCHAR(20) NOT NULL,
+  email VARCHAR(320),
+  cpfCnpj VARCHAR(20),
+  especialidades TEXT,
+  comissaoPercentual INT DEFAULT 0 NOT NULL,
+  bancoNome VARCHAR(255),
+  agencia VARCHAR(10),
+  contaBancaria VARCHAR(20),
+  tipoConta ENUM('corrente','poupanca'),
+  ativo BOOLEAN DEFAULT TRUE NOT NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS servicos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nome VARCHAR(255) NOT NULL,
+  descricao TEXT,
+  preco INT NOT NULL,
+  duracaoMinutos INT NOT NULL,
+  ativo BOOLEAN DEFAULT TRUE NOT NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS produtos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nome VARCHAR(255) NOT NULL,
+  descricao TEXT,
+  preco INT NOT NULL,
+  estoque INT DEFAULT 0 NOT NULL,
+  estoqueMinimo INT DEFAULT 0 NOT NULL,
+  ativo BOOLEAN DEFAULT TRUE NOT NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS agendamentos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  clienteId INT NOT NULL,
+  funcionarioId INT NOT NULL,
+  servicoId INT NOT NULL,
+  dataHora DATETIME NOT NULL,
+  status ENUM('agendado','confirmado','em_atendimento','concluido','cancelado') DEFAULT 'agendado' NOT NULL,
+  observacoes TEXT,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS transacoes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  tipo ENUM('servico','produto','pacote') NOT NULL,
+  clienteId INT NOT NULL,
+  funcionarioId INT,
+  agendamentoId INT,
+  valor INT NOT NULL,
+  comissaoFuncionario INT DEFAULT 0 NOT NULL,
+  metodoPagamento ENUM('dinheiro','cartao_credito','cartao_debito','pix','outro') NOT NULL,
+  descricao TEXT,
+  dataTransacao DATETIME NOT NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS itensTransacao (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  transacaoId INT NOT NULL,
+  produtoId INT,
+  servicoId INT,
+  quantidade INT DEFAULT 1 NOT NULL,
+  precoUnitario INT NOT NULL,
+  subtotal INT NOT NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS pacotes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nome VARCHAR(255) NOT NULL,
+  descricao TEXT,
+  preco INT NOT NULL,
+  precoOriginal INT NOT NULL,
+  servicosInclusos TEXT NOT NULL,
+  validade INT NOT NULL,
+  ativo BOOLEAN DEFAULT TRUE NOT NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS pacotesClientes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  clienteId INT NOT NULL,
+  pacoteId INT NOT NULL,
+  dataCompra DATETIME NOT NULL,
+  dataValidade DATETIME NOT NULL,
+  servicosRestantes TEXT NOT NULL,
+  status ENUM('ativo','utilizado','expirado') DEFAULT 'ativo' NOT NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS historicoAtendimentos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  clienteId INT NOT NULL,
+  servicoId INT NOT NULL,
+  funcionarioId INT NOT NULL,
+  dataAtendimento DATETIME NOT NULL,
+  valorPago INT NOT NULL,
+  avaliacaoCliente INT,
+  observacoes TEXT,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS segmentosClientes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nome VARCHAR(255) NOT NULL,
+  descricao TEXT,
+  caracteristicas TEXT NOT NULL,
+  totalClientes INT DEFAULT 0 NOT NULL,
+  dataAnalise DATETIME NOT NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS clientesSegmentos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  clienteId INT NOT NULL,
+  segmentoId INT NOT NULL,
+  score INT NOT NULL,
+  dataAtribuicao DATETIME NOT NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Adiciona coluna de senha
+ALTER TABLE users 
+ADD COLUMN senha VARCHAR(255) NULL AFTER email;
+
+-- Adiciona coluna ativo
+ALTER TABLE users 
+ADD COLUMN ativo BOOLEAN DEFAULT 1 AFTER role;
+
+-- Modifica o ENUM de role
+ALTER TABLE users 
+MODIFY COLUMN role ENUM('user', 'admin', 'gerente', 'atendente') NOT NULL DEFAULT 'user';
+
+-- Torna email obrigatório e único
+ALTER TABLE users 
+MODIFY COLUMN email VARCHAR(320) NOT NULL,
+ADD UNIQUE KEY unique_email (email);

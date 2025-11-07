@@ -1,0 +1,16 @@
+# 1. Framework principal para a aplicação web
+Flask==3.0.3
+
+# 2. ORM (Object-Relational Mapper) para interagir com o banco de dados
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.30
+
+# 3. Driver para conectar o SQLAlchemy ao MySQL
+PyMySQL==1.1.1
+
+# 4. Habilita Cross-Origin Resource Sharing (CORS) para a API
+# Essencial para que o frontend (React) possa se comunicar com o backend
+Flask-Cors==4.0.1
+
+# 5. Para carregar variáveis de ambiente (não usado diretamente, mas boa prática)
+python-dotenv==1.0.1
